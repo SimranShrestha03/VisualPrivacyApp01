@@ -281,7 +281,7 @@ function calcGreyScale(){
 }
 
 function startEdit() {
-    doppelgangerSets.push(getDoppelgangerImages(imageDir60, 2))
+    doppelgangerSets.push(getDoppelgangerImages(imageDir60, 2)) // LDP: Get images we will display if / when the dopplegagner slider is adjusted
     doppelgangerSets.push(getDoppelgangerImages(imageDir60, 3))
     doppelgangerSets.push(getDoppelgangerImages(imageDir60, 4))
     timestamp = new Date().getTime();
@@ -327,6 +327,7 @@ function startEdit() {
     xScale = 600 / (mat.size().width);
     yScale = 600 / (mat.size().height);
 
+    // LDP: Add the blur face effect. Just random noise in a square shape to paste over the face 
     // draw the noise layer:
     var blurNoiseSizeWidth = face.width / 40;
     var blurNoiseSizeHeight = face.height / 40;
@@ -343,20 +344,27 @@ function startEdit() {
         }
     }
 
-    // Draw contour
+    // LDP: Draw scrible layer
+    // Init empty matricies that will hold images
     var image = new cv.Mat();
     var cannyImage = new cv.Mat();
 
+    // Convert input image (mat) to grayscale and store in image var
     cv.cvtColor(mat, image, cv.COLOR_RGBA2GRAY, 0);
+    // Perform canny edge detection on image (mat) and store in cannyImage variable
     cv.Canny(mat, cannyImage, 50, 100, 3, false);
 
-    var contours = new cv.MatVector();
+    // init variables (mattricies and mattricy vectors)
+    var contours = new cv.MatVector(); 
     var hierarchy = new cv.Mat();
     var poly = new cv.MatVector();
 
+    //prep image by converting it to  8-bit, 3-channel format
     mat.convertTo(image, cv.CV_8UC3);
+    // find countours from cannyImage and stores the contrours and hierchy of countours
     cv.findContours(cannyImage, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
 
+    //Draw countours with random colors and store in contour variable
     var contour = new cv.Mat();
     contour = cv.Mat.zeros(mat.rows, mat.cols, cv.CV_8UC3);
 
@@ -365,11 +373,14 @@ function startEdit() {
             Math.round(Math.random() * 255));
         cv.drawContours(contour, contours, i, color, 1, 8, hierarchy, 10);
     }
+
+    //Resize the created image and store it as a layer we can easily turn on and off later
     var contourScaled = new cv.Mat();
     console.log(contour.size())
     cv.resize(contour, contourScaled ,dsize, 0, 0, cv.INTER_AREA);
     cv.imshow("scribbleLayer", contourScaled);
 
+    //This next bit of code isn't actually used. You will find a number of effects in this code that were started but never finished. This is one of them
     // Draw sth
     image = new cv.Mat();
     cannyImage = new cv.Mat();
@@ -397,7 +408,7 @@ function startEdit() {
     cv.resize(contour, contourScaled ,dsize, 0, 0, cv.INTER_AREA);
     cv.imshow("recolorLayer", contourScaled);
 
-    //
+    //LDP: Create a semi transpparent rectanble to throw over the agent image as the Full color option
     ctxFullColorLayer.fillStyle =  'rgba('+
         Math.floor(Math.random()*256) + ',' +
         Math.floor(Math.random()*256) + ',' +
@@ -590,7 +601,8 @@ function shuffle(array) {
     return array;
 }
 
-
+//LDP function that returns a set of images (dopplegangers) based on the value of the slider.
+// IIRC correctly this function is called on load (for each potential value) and the results stored in an array for use in the next function.
 function getDoppelgangerImages(directory, value) {
     //f"{id}_{gender}_{race}_{background}_{costume}"
     let chosenInfo=chosenPlayer.src
@@ -600,6 +612,7 @@ function getDoppelgangerImages(directory, value) {
     }
     let gender=-1
     let genderOffset=-1
+    //Thie first 12 identies are men, the next 12 are women. We
     if (chosenId<12){
         gender='0'
         genderOffset=0
@@ -611,6 +624,7 @@ function getDoppelgangerImages(directory, value) {
 
     let imagesToReturn=[]
 
+    // We can determine race, background type of image, and costume type based on numbers in the agent image filename
     let race = chosenInfo.substring(chosenInfo.length-9, chosenInfo.length-8)
     let background = chosenInfo.substring(chosenInfo.length-7, chosenInfo.length-6)
     let costume = chosenInfo.substring(chosenInfo.length-5, chosenInfo.length-4)
@@ -619,24 +633,24 @@ function getDoppelgangerImages(directory, value) {
     let file=""
 
     do {
-        firstIdToSkip = (getRandomInt(11) + genderOffset).toString()
+        firstIdToSkip = (getRandomInt(11) + genderOffset).toString() //pick a random identity of the given gender
     } while (firstIdToSkip == chosenId)
     idsToSkip.push(firstIdToSkip)
 
     if(gender==0){
-        idsToSkip.push('4') //There is no Identity 4
+        idsToSkip.push('4') //There is no male Identity 4
     }else{
-        do {
+        do { //There is only space to show the user 10 dopplegangers so we will ned to skip 1 if the agent is female
             secondIdToSkip = (getRandomInt(11) + genderOffset).toString()
         } while (secondIdToSkip == chosenId || secondIdToSkip == firstIdToSkip)
         idsToSkip.push(secondIdToSkip)
     }
-
+    //chose more or less similiar images based on the value of the slider
     for (let i = genderOffset; i < (12+genderOffset); i++) {
         if (i.toString()===chosenId || idsToSkip.includes(i.toString())){
             continue
         }
-        if(value==2){
+        if(value==2){ //if slider is value 
             do{
                 file=i+'_'+gender+'_'+race_is_element_id_is_pos[i]+'_'+getRandomInt(2)+'_'+getRandomInt(9);
             } while(!fileExists(file))
@@ -663,6 +677,7 @@ function getDoppelgangerImages(directory, value) {
     return shuffle(imagesToReturn);
 }
 
+// function that acutally changes the doppleganger images based on slider value
 function updateDoppelgangers(value){
     if ((lastSliderVal < value && value > 2) || (lastSliderVal > value && value > 1)){
         editLimit = editLimit - (value - lastSliderVal)
@@ -832,7 +847,7 @@ function toggelEffect(effectID) {
         }
         return;
     }
-    if (effectID === "gaussianBlur") {
+    if (effectID === "gaussianBlur") { // LDP: Turns on blur for all the Layers. Uses built in blur effect: https://developer.mozilla.org/en-US/docs/Web/CSS/filter
         if (editCanvas.style.filter === "") {
             editCanvas.style.filter = "blur(5px)";
             blurLayer.style.filter = "blur(5px)";
