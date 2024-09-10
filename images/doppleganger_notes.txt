@@ -1,0 +1,17 @@
+Doppelganger Notes.
+
+Firstly you will see three folders, cherry_picked_pics, cherry_picked_pics_150, and cherry_picked_pics_60. These exist because we display these images at three different resolutions: Original for when the agent is being disguised / undisguised, 150 x 150 pixels when choosing the agent to disguise, and finally 60x60 for doppelgangers.
+
+Doppelganger file names follow a pattern: A_B_C_D_E.png
+
+A: Identity, (0-11 are male, 12-23 are female)
+B: Gender: 0=male, 1=female
+C: Race, 0 = white, 1 = Latin, 2 = Black, 3=Asian
+D: clothing
+E: Background
+
+For Clothing and Background I don't remember what correlates to what and frankly there was relatively little consistency in the images generated anyway. As a side note it's interesting to see how despite having the same prompt for clothing the different Identities are generated with different clothing trends. For example note the difference in the clothing on Asian characters versus the others races despite using the same words to describe their clothes in the image prompt. It's either Bias in the model or leakage between input terms.
+
+How Doppelgangers work in the code: As the slider is turned up the doppelgangers match the agent character more closely. If the slider is at the lowest level then doppelgangers are completely random, up a level all doppelgangers are the same gender, at the next level clothing is also the same, and at the final level background is also the same.
+
+Potential problems: The ai model didn't generate perfect images and a lot had to be cut. As a result there is no identity 4 and some identities have less characteristic combinations available then others. In my logic if there aren't enough matching doppelgangers available then we introduce some randomness. Honestly, while these doppelgangers certainly could be reused there would also be value in generating new ones now that the technology has several years to mature.
